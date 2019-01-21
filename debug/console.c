@@ -1,6 +1,8 @@
 #include "debug/console.h"
 #include <stddef.h>
 #include <malloc.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 static struct zl_debug_config *__config = NULL;
 
@@ -64,4 +66,61 @@ int zl_debug_config_error_switch(bool open_flag)
         return -1;
 
     return __config_switch_field(&__config->error_switch, open_flag);
+}
+
+/**
+ * info
+ * @param format
+ * @param args
+ *
+ */
+int zl_debug_print(bool flag, const char * const format, ...)
+{
+    va_list args;
+    if (__config == NULL)
+        return -1;
+    if (flag == false)
+        return -2;
+
+    va_start(args, format);
+    fprintf(stderr, format, args);
+    va_end(args);
+
+    return 0;
+}
+
+/**
+ * get info status
+ * 
+ */
+bool zl_debug_config_info()
+{
+    if (__config == NULL)
+        return false;
+    
+    return __config->info_switch;
+}
+
+/**
+ * get warn status
+ *
+ */
+bool zl_debug_config_warn()
+{
+    if (__config == NULL)
+        return false;
+
+    return __config->warn_switch;
+}
+
+/**
+ * get error status
+ *
+ */
+bool zl_debug_config_error()
+{
+    if (__config == NULL)
+        return false;
+
+    return __config->error_switch;
 }
