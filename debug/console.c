@@ -69,27 +69,6 @@ int zl_debug_config_error_switch(bool open_flag)
 }
 
 /**
- * info
- * @param format
- * @param args
- *
- */
-int zl_debug_print(bool flag, const char * const format, ...)
-{
-    va_list args;
-    if (__config == NULL)
-        return -1;
-    if (flag == false)
-        return -2;
-
-    va_start(args, format);
-    fprintf(stderr, format, args);
-    va_end(args);
-
-    return 0;
-}
-
-/**
  * get info status
  * 
  */
