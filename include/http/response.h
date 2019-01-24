@@ -48,7 +48,7 @@ void zl_http_res_protocol_add_param(struct http_res_protocol * const res,
                                     char * val);
 
 void
-zl_http_res_protocol_set_content_length(struct http_res_protocol * const res);
+zl_http_res_protocol_default_params(struct http_res_protocol * const res);
 
 bool zl_http_res_protocol_serialize(struct http_res_protocol * const res);
 

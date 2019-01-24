@@ -16,6 +16,6 @@ void zl_webgateway_enter(struct http_req_protocol * const req,
 
     __web_resource(req, res);
 
-    zl_http_res_protocol_set_content_length(res);
+    zl_http_res_protocol_default_params(res);
     info("enter web gateway");
 }
