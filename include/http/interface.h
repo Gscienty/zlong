@@ -2,6 +2,7 @@
 #define _ZL_HTTP_INTERFACE_H
 
 #include "http/parser.h"
+#include "http/response.h"
 #include "utils/rbtree.h"
 #include <netinet/in.h>
 #include <uv.h>
@@ -22,6 +23,8 @@ struct http_session_node {
     uv_tcp_t tcp_sock;
     struct http_req_parser parser;
     struct http_req_protocol req_protocol;
+    struct http_res_protocol res_protocol;
+    uv_write_t writer;
 
     void * buf;
     size_t buf_size;
