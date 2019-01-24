@@ -2,6 +2,7 @@
 #define _ZL_DEBUG_CONSOLE_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 struct zl_debug_config {
     bool info_switch;
