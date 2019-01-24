@@ -1,3 +1,5 @@
+#include "http/web_gateway.h"
+#include "http/response.h"
 #include "http/interface.h"
 #include "debug/console.h"
 #include <malloc.h>
@@ -107,6 +109,9 @@ static void __session_destory(struct http_session_node * const session)
 {
     if (session->buf != NULL)
         free(session->buf);
+
+    zl_http_req_protocol_reset(&session->req_protocol);
+
     rbtree_delete(&__sessions, &session->node);
     free(session);
 }
@@ -125,6 +130,39 @@ static void __session_close(uv_handle_t * handle)
     __session_destory(session);
 }
 
+static void __session_write(uv_write_t *req, int status)
+{
+    if (status < 0)
+        return;
+}
+
+static void __session_reset(struct http_session_node * const session)
+{
+    zl_http_res_protocol_clear(&session->res_protocol);
+    zl_http_req_parser_init(&session->parser);
+    zl_http_req_protocol_reset(&session->req_protocol);
+}
+
+static bool __session_respond(uv_stream_t * stream,
+                              struct http_session_node * const session)
+{
+    uv_buf_t buf;
+    
+    if (!zl_http_res_protocol_serialize(&session->res_protocol)) {
+        return false;
+    }
+
+    buf.base = session->res_protocol.tcp_payload;
+    buf.len  = session->res_protocol.tcp_payload_writable;
+
+    session->res_protocol.tcp_payload          = NULL;
+    session->res_protocol.tcp_payload_size     = 0;
+    session->res_protocol.tcp_payload_writable = 0;
+
+    uv_write(&session->writer, stream, &buf, 1, __session_write);
+    return true;
+}
+
 static void __session_read(uv_stream_t * stream,
                            ssize_t nread,
                            const uv_buf_t * buf)
@@ -133,9 +171,8 @@ static void __session_read(uv_stream_t * stream,
     struct http_session_node *session;
 
     session_node = __sessions_find((uv_tcp_t *) stream);
-    if (session_node == &__sessions.nil) {
+    if (session_node == &__sessions.nil)
         return;
-    }
     session = container_of(session_node, struct http_session_node, node);
 
     if (nread <= 0 && nread != EAGAIN) {
@@ -148,6 +185,13 @@ static void __session_read(uv_stream_t * stream,
                                &session->req_protocol,
                                buf->base,
                                nread);
+
+    if (session->parser.stat == HTTP_REQ_STAT_END) {
+        zl_webgateway_enter(&session->req_protocol, &session->res_protocol);
+        if (!__session_respond(stream, session))
+            uv_close((uv_handle_t *) stream, __session_close);
+        __session_reset(session);
+    }
 }
 
 static void __new_session(uv_stream_t *server, int status)
