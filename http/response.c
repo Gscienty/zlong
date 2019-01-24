@@ -45,11 +45,15 @@ void zl_http_res_protocol_add_param(struct http_res_protocol * const res,
     zl_kv_param_dict_add(&res->params, param);
 }
 
-void
-zl_http_res_protocol_set_content_length(struct http_res_protocol * const res)
+static void
+__default_param_content_length(struct http_res_protocol * const res)
 {
-    char * content_length = zl_kv_param_dict_find(&res->params, "Content-Length");
-    if (content_length != NULL)
+    char * val =
+        zl_kv_param_dict_find(&res->params, "Content-Length");
+    if (val != NULL)
+        return;
+    val = zl_kv_param_dict_find(&res->params, "Transfer-Encoding");
+    if (val != NULL && strcmp(val, "chunked") == 0)
         return;
 
     snprintf(res->tmp, HTTP_RES_TMP_MAX_SIZE, "%ld", res->payload_size);
@@ -57,6 +61,24 @@ zl_http_res_protocol_set_content_length(struct http_res_protocol * const res)
     zl_http_res_protocol_add_param(res,
                                    strdup("Content-Length"),
                                    strdup(res->tmp));
+}
+
+static void __default_param_connection(struct http_res_protocol * const res)
+{
+    char * val =
+        zl_kv_param_dict_find(&res->params, "Connection");
+    if (val != NULL)
+        return;
+
+    zl_http_res_protocol_add_param(res,
+                                   strdup("Connection"),
+                                   strdup("keep-alive"));
+}
+
+void zl_http_res_protocol_default_params(struct http_res_protocol * const res)
+{
+    __default_param_connection(res);
+    __default_param_content_length(res);
 }
 
 static bool __tcp_payload_realloc(struct http_res_protocol * const res)
