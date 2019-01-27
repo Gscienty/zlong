@@ -3,7 +3,7 @@
 
 #include "utils/linked_list.h"
 #include "utils/version.h"
-#include "http/parser.h"
+#include "utils/rbtree.h"
 #include <stdbool.h>
 
 #define HTTP_RES_TMP_MAX_SIZE 32

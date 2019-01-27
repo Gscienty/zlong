@@ -1,5 +1,5 @@
-#ifndef _ZL_HTTP_PARSER_H
-#define _ZL_HTTP_PARSER_H
+#ifndef _ZL_HTTP_REQUEST_H
+#define _ZL_HTTP_REQUEST_H
 
 #include "utils/version.h"
 #include "utils/rbtree.h"

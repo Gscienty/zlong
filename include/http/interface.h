@@ -1,7 +1,7 @@
 #ifndef _ZL_HTTP_INTERFACE_H
 #define _ZL_HTTP_INTERFACE_H
 
-#include "http/parser.h"
+#include "http/request.h"
 #include "http/response.h"
 #include "utils/rbtree.h"
 #include <netinet/in.h>

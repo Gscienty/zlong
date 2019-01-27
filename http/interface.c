@@ -1,5 +1,4 @@
 #include "http/web_gateway.h"
-#include "http/response.h"
 #include "http/interface.h"
 #include "debug/console.h"
 #include <malloc.h>
@@ -132,6 +131,7 @@ static void __session_close(uv_handle_t * handle)
 
 static void __session_write(uv_write_t *req, int status)
 {
+    (void) req;
     if (status < 0)
         return;
 }
