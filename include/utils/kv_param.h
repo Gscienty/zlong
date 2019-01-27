@@ -27,4 +27,7 @@ char * zl_kv_param_dict_find(struct rbroot * const root,
 bool zl_kv_param_dict_add(struct rbroot * const root,
                           struct kv_param * const param);
 
+bool zl_kv_param_dict_delete(struct rbroot * const root,
+                             const char * const key);
+
 #endif

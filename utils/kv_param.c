@@ -51,8 +51,8 @@ static int __param_key_cmp(const char * const a, const char * const b)
     return strcmp(a, b);
 }
 
-char * zl_kv_param_dict_find(struct rbroot * const root,
-                             const char * const key)
+static struct rbnode * __dict_find(struct rbroot * const root,
+                                   const char * const key)
 {
     struct kv_param * param;
     struct rbnode * node;
@@ -64,14 +64,25 @@ char * zl_kv_param_dict_find(struct rbroot * const root,
         param = container_of(node, struct kv_param, node);
         cmpret = __param_key_cmp(key, param->key);
         if (cmpret == 0)
-            return param->val;
+            break;
         else if (cmpret < 0)
             node = node->left;
         else
             node = node->right;
     }
 
-    return NULL;
+    return node;
+}
+
+char * zl_kv_param_dict_find(struct rbroot * const root,
+                             const char * const key)
+{
+    struct rbnode * node = __dict_find(root, key);
+
+    if (node == &root->nil)
+        return NULL;
+    else
+        return container_of(node, struct kv_param, node)->val;
 }
 
 bool zl_kv_param_dict_add(struct rbroot * const root,
@@ -101,5 +112,23 @@ bool zl_kv_param_dict_add(struct rbroot * const root,
     }
 
     rbtree_fixup(root, &param->node);
+    return true;
+}
+
+
+bool zl_kv_param_dict_delete(struct rbroot * const root,
+                             const char * const key)
+{
+    struct rbnode * node = __dict_find(root, key);
+    struct kv_param * param;
+    if (node == &root->nil)
+        return false;
+
+    param = container_of(node, struct kv_param, node);
+
+    rbtree_delete(root, node);
+    zl_kv_param_clear(param);
+    free(param);
+
     return true;
 }
