@@ -63,6 +63,6 @@ void ll_remove(struct llnode * const node)
     struct llnode *prev = node->prev;
     struct llnode *next = node->next;
 
-    prev->next = next;
-    next->prev = prev;
+    prev->next = node->next;
+    next->prev = node->prev;
 }
