@@ -287,54 +287,43 @@ static bool __param_serialize(struct http_res_protocol * const res,
 static bool __params_serialize(struct http_res_protocol * const res)
 {
     struct llnode stack;
-    struct http_param_llnode * stack_node;
-    struct http_param_llnode * stack_top;
-    struct rbnode * param_node;
-
-    if (res->params.root == &res->params.nil) {
-        return true;
-    }
-    param_node = res->params.root;
+    struct http_param_llnode * newly;
+    struct http_param_llnode * top;
 
     ll_head_init(&stack);
-    stack_node = (struct http_param_llnode *)
-        malloc(sizeof(struct http_param_llnode));
-    stack_node->param = container_of(param_node, struct kv_param, node);
-    ll_insert_before(&stack, &stack_node->node);
 
-    while (!ll_empty(&stack)) {
-        stack_top = container_of(stack.next, struct http_param_llnode, node);
-
-        if (!__param_serialize(res, stack_top->param)) {
-            while (!ll_empty(&stack)) {
-                stack_top = container_of(stack.next, struct http_param_llnode, node);
-                free(stack_top);
-            }
-            return false;
-        }
-
-        if (stack_top->param->node.left != &res->params.nil) {
-            stack_node = (struct http_param_llnode *)
-                malloc(sizeof(struct http_param_llnode));
-            stack_node->param = container_of(stack_node->param->node.left,
-                                             struct kv_param,
-                                             node);
-            ll_insert_before(&stack, &stack_node->node);
-        }
-        
-        if (stack_top->param->node.right != &res->params.nil) {
-            stack_node = (struct http_param_llnode *)
-                malloc(sizeof(struct http_param_llnode));
-            stack_node->param = container_of(stack_node->param->node.right,
-                                             struct kv_param,
-                                             node);
-            ll_insert_before(&stack, &stack_node->node);
-        }
-
-        ll_remove(&stack_top->node);
-        free(stack_top);
+    if (res->params.root != &res->params.nil) {
+        newly = (struct http_param_llnode *)
+            malloc(sizeof(struct http_param_llnode));
+        newly->param = container_of(res->params.root, struct kv_param, node);
+        ll_insert_before(&stack, &newly->node);
     }
 
+    while (!ll_empty(&stack)) {
+        top = container_of(stack.next, struct http_param_llnode, node);
+        __param_serialize(res, top->param);
+
+        if (top->param->node.left != &res->params.nil) {
+            newly = (struct http_param_llnode *)
+                malloc(sizeof(struct http_param_llnode));
+            newly->param = container_of(top->param->node.left,
+                                        struct kv_param,
+                                        node);
+            ll_insert_before(&stack, &newly->node);
+        }
+
+        if (top->param->node.right != &res->params.nil) {
+            newly = (struct http_param_llnode *)
+                malloc(sizeof(struct http_param_llnode));
+            newly->param = container_of(top->param->node.right,
+                                        struct kv_param,
+                                        node);
+            ll_insert_before(&stack, &newly->node);
+        }
+
+        ll_remove(&top->node);
+        free(top);
+    }
     return true;
 }
 
