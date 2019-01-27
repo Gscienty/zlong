@@ -54,8 +54,7 @@ static void __call_func(struct lua_State * lua,
 
     lua_getglobal(lua, __func_name(req));
     __wrap_http_protocol(lua, req, res);
-    lua_call(lua, 2, 0);
-    /*lua_pcall(lua, 2, 0, 0);*/
+    lua_pcall(lua, 2, 0, 0);
 }
 
 void zl_lua_engine_call(const char * script_path,
