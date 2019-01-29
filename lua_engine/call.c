@@ -7,6 +7,8 @@
 static struct lua_method_mapper __func_names[] = {
     { HTTP_REQ_METHOD_GET, "get" },
     { HTTP_REQ_METHOD_POST, "post" },
+    { HTTP_REQ_METHOD_PUT, "put" },
+    { HTTP_REQ_METHOD_DELETE, "delete" }
 };
 
 const char * __func_name(struct http_req_protocol * const req)
@@ -54,6 +56,7 @@ static void __call_func(struct lua_State * lua,
 
     lua_getglobal(lua, __func_name(req));
     __wrap_http_protocol(lua, req, res);
+
     lua_pcall(lua, 2, 0, 0);
 }
 
