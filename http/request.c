@@ -19,6 +19,7 @@ void zl_http_req_parser_init(struct http_req_parser * const parser)
     parser->stat             = HTTP_REQ_STAT_HEADER_METHOD;
     parser->content_length   = 0;
     parser->content_received = 0;
+    parser->param_used       = 0;
 }
 
 /**
@@ -71,7 +72,11 @@ static bool __set_method(struct http_req_protocol * const req,
     if (strcmp(parser->method, "GET") == 0)
         req->method = HTTP_REQ_METHOD_GET;
     else if (strcmp(parser->method, "POST") == 0)
-        req->method = HTTP_REQ_METHOD_GET;
+        req->method = HTTP_REQ_METHOD_POST;
+    else if (strcmp(parser->method, "PUT") == 0)
+        req->method = HTTP_REQ_METHOD_PUT;
+    else if (strcmp(parser->method, "DELETE") == 0)
+        req->method = HTTP_REQ_METHOD_DELETE;
 
     return true;
 }
@@ -117,11 +122,15 @@ static bool __req_param_append(struct http_req_protocol * const req,
     char * delimiter = strchr(parser->param, ':');
     struct kv_param * param;
 
-    if (delimiter == NULL)
+    if (delimiter == NULL) {
+        info("append param error[delimiter not found]: %s", parser->param);
         return false;
+    }
     param = (struct kv_param *) malloc(sizeof(struct kv_param));
-    if (param == NULL)
+    if (param == NULL) {
+        error("append param error[alloc failed]: %s", parser->param);
         return false;
+    }
     zl_kv_param_init(param, &req->params);
 
     *delimiter = 0;
@@ -130,6 +139,7 @@ static bool __req_param_append(struct http_req_protocol * const req,
     zl_kv_param_set(param, strdup(parser->param), strdup(delimiter));
 
     if (!zl_kv_param_dict_add(&req->params, param)) {
+        error("append param error[add dict failed]: %s", parser->param);
         zl_kv_param_clear(param);
         free(param);
 
@@ -167,7 +177,6 @@ static size_t __parse_header(struct http_req_parser * const parser,
            && parser->stat != HTTP_REQ_STAT_END
            && parser->stat != HTTP_REQ_STAT_HEADER_END
            && parser->stat != HTTP_REQ_STAT_ERROR) {
-
         c = data[used_size++];
         switch (parser->stat) {
         default:
@@ -280,18 +289,26 @@ size_t zl_http_req_protocol_parse(struct http_req_parser * const parser,
     size_t used_size;
 
     if (parser->stat == HTTP_REQ_STAT_RAW) {
-        if (parser->content_length - parser->content_received == 0) {
+        info("continue parse raw");
+        if (parser->content_length == parser->content_received) {
             parser->stat = HTTP_REQ_STAT_END;
             return 0;
         }
+
         used_size = __parse_raw(parser, req, data, len);
         parser->content_received += used_size;
+
+        if (parser->content_length == parser->content_received) {
+            parser->stat = HTTP_REQ_STAT_END;
+        }
         return used_size;
     }
 
+    info("parse header");
     used_size = __parse_header(parser, req, data, len);
 
     if (parser->stat == HTTP_REQ_STAT_HEADER_END) {
+        info("first parse raw");
         content_length = zl_kv_param_dict_find(&req->params, "Content-Length");
         if (content_length == NULL) {
             parser->stat = HTTP_REQ_STAT_END;
@@ -302,8 +319,15 @@ size_t zl_http_req_protocol_parse(struct http_req_parser * const parser,
             parser->content_received +=
                 __parse_raw(parser, req, data + used_size, len - used_size);
             used_size += parser->content_received;
+
+            if (parser->content_length == parser->content_received) {
+                parser->stat = HTTP_REQ_STAT_END;
+            }
         }
     }
+
+    info("parse finished, used_size: %ld", used_size);
+    info("%s", data + used_size);
 
     return used_size;
 }
