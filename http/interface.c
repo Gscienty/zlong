@@ -31,8 +31,10 @@ static void __sessions_add(struct http_session_node * const session)
             flag_session = container_of(parent, struct http_session_node, node);
             flag = &flag_session->tcp_sock;
 
-            if (flag == &session->tcp_sock)
+            if (&session->tcp_sock == flag) {
+                info("yami");
                 return;
+            }
             else if (&session->tcp_sock < flag)
                 place = &parent->left;
             else 
@@ -73,6 +75,7 @@ static void __session_init(struct http_session_node * const session,
     rbtree_node_init(&__sessions, &session->node);
     zl_http_req_parser_init(&session->parser);
     zl_http_req_protocol_init(&session->req_protocol);
+    zl_http_res_protocol_init(&session->res_protocol);
     uv_tcp_init(loop, &session->tcp_sock);
 
     session->buf = NULL;
@@ -136,13 +139,6 @@ static void __session_write(uv_write_t *req, int status)
         return;
 }
 
-static void __session_reset(struct http_session_node * const session)
-{
-    zl_http_res_protocol_clear(&session->res_protocol);
-    zl_http_req_parser_init(&session->parser);
-    zl_http_req_protocol_reset(&session->req_protocol);
-}
-
 static bool __session_respond(uv_stream_t * stream,
                               struct http_session_node * const session)
 {
@@ -171,15 +167,20 @@ static void __session_read(uv_stream_t * stream,
     struct http_session_node *session;
 
     session_node = __sessions_find((uv_tcp_t *) stream);
-    if (session_node == &__sessions.nil)
+    if (session_node == &__sessions.nil) {
+        error("session not found");
         return;
+    }
     session = container_of(session_node, struct http_session_node, node);
 
+
     if (nread <= 0 && nread != EAGAIN) {
-        info("session[%d] closed", session->tcp_sock.io_watcher.fd);
+        info("close session[%x]", session);
         uv_close((uv_handle_t *) stream, __session_close);
         return;
     }
+
+    info("parse http request: %x", session);
 
     zl_http_req_protocol_parse(&session->parser,
                                &session->req_protocol,
@@ -188,9 +189,14 @@ static void __session_read(uv_stream_t * stream,
 
     if (session->parser.stat == HTTP_REQ_STAT_END) {
         zl_webgateway_enter(&session->req_protocol, &session->res_protocol);
+
+        zl_http_req_parser_init(&session->parser);
+        zl_http_req_protocol_reset(&session->req_protocol);
+
         if (!__session_respond(stream, session))
             uv_close((uv_handle_t *) stream, __session_close);
-        __session_reset(session);
+
+        zl_http_res_protocol_clear(&session->res_protocol);
     }
 }
 
@@ -217,7 +223,7 @@ static void __new_session(uv_stream_t *server, int status)
         return;
     }
 
-    info("accept a newly session[%d]", session->tcp_sock.io_watcher.fd);
+    info("accept a newly session[%x]", session);
     __sessions_add(session);
 
     uv_read_start((uv_stream_t *) &session->tcp_sock,
