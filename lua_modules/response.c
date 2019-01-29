@@ -19,7 +19,7 @@ static int __lua_set_response_status_code(struct lua_State * lua)
     short status_code;
 
     protocol = lua_touserdata(lua, 1);
-    if (__protocol_legal(protocol))
+    if (!__protocol_legal(protocol))
         return 0;
     res = (struct http_res_protocol *) protocol->ptr;
     status_code = lua_tointeger(lua, 2);
@@ -66,7 +66,7 @@ static int __lua_set_response_param(struct lua_State * lua)
     struct kv_param * newly_param;
 
     protocol = lua_touserdata(lua, 1);
-    if (__protocol_legal(protocol))
+    if (!__protocol_legal(protocol))
         return 0;
     req = (struct http_res_protocol *) protocol->ptr;
     key = lua_tostring(lua, 2);
@@ -87,13 +87,14 @@ static int __lua_set_response_string_body(struct lua_State * lua)
     const char * val;
 
     protocol = lua_touserdata(lua, 1);
-    if (__protocol_legal(protocol))
+    if (!__protocol_legal(protocol))
         return 0;
     req = (struct http_res_protocol *) protocol->ptr;
     val = lua_tostring(lua, 2);
 
     req->payload_size = strlen(val);
     req->payload = strdup(val);
+
 
     return 1;
 }
