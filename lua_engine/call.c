@@ -53,7 +53,6 @@ static void __call_func(struct lua_State * lua,
                         struct http_res_protocol * const res)
 {
     lua_settop(lua, 0);
-
     lua_getglobal(lua, __func_name(req));
     __wrap_http_protocol(lua, req, res);
 
