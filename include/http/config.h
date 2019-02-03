@@ -2,11 +2,13 @@
 #define _ZL_HTTP_CONFIG_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 struct config {
     const char * addr;
     uint16_t port;
     const char * script_path;
+    const char * route_path;
 };
 
 /**

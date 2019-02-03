@@ -9,9 +9,10 @@ static struct config __config;
  */
 void zl_config_init()
 {
-    __config.addr = NULL;
-    __config.port = 0;
+    __config.addr        = NULL;
+    __config.port        = 0;
     __config.script_path = NULL;
+    __config.route_path  = NULL;
 }
 
 /**
