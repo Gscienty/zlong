@@ -2,13 +2,15 @@ PWD = $(shell pwd)
 CC = gcc
 LIBS = -L ./ -llua -luv -ldl -lm -lpthread -L ./cargs -lcargs
 INCS = -I include/ -I cargs/include/
+FLAG = -fPIC -shared
 DEBUG_SOURCES = debug/console.c 
 HTTP_SOURCES = http/config.c \
 			   http/interface.c \
 			   http/request.c \
 			   http/response.c \
 			   http/web_gateway.c 
-LUA_ENGINE_SOURCES = lua_engine/call.c
+LUA_ENGINE_SOURCES = lua_engine/call.c \
+					 lua_engine/router.c
 SERVER_SOURCES = server/http.c \
 				server/main.c
 UTILS_SOURCES = utils/kv_param.c \
@@ -33,13 +35,40 @@ CLEAN_MODULE_OBJS = for source in `echo $^ | awk '{gsub(/\.c( |$$)/,".o ",$$0);p
 						fi; \
 					done
 
-all: cargs_build \
-	link_objs
+LUA_MODULES = request response
 
-clean: clean_obj
+BUILD_LUA_MODULE = $(CC) $(INCS) $(FLAG) $(UTILS_SOURCES) lua_modules/$^.c $(LIBS) -o $^.so
+CLEAN_LUA_MODULE = if [[ -e "$^.so" ]]; then \
+				   		rm "$^.so"; \
+				   fi;
+
+all: cargs_build \
+	link_objs \
+	build_lua_module
+
+clean: clean_obj \
+	clean_lua_module
 	if [[ -e "$(SERVER_NAME)" ]]; then \
 		rm "$(SERVER_NAME)"; \
 	fi
+
+build_lua_module: build_lua_module_request \
+	build_lua_module_response
+
+clean_lua_module: clean_lua_module_request \
+	clean_lua_module_response
+
+build_lua_module_request: request
+	$(BUILD_LUA_MODULE)
+
+clean_lua_module_request: request
+	$(CLEAN_LUA_MODULE)
+
+build_lua_module_response: response
+	$(BUILD_LUA_MODULE)
+
+clean_lua_module_response: response
+	$(CLEAN_LUA_MODULE)
 
 cargs_build:
 	git submodule update --init --recursive
@@ -90,4 +119,5 @@ build_utils: $(UTILS_SOURCES)
 clean_utils: $(UTILS_SOURCES)
 	$(CLEAN_MODULE_OBJS)
 
+.PHONY: $(LUA_MODULES) clean
 
