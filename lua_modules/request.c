@@ -83,7 +83,7 @@ static int __lua_set_request_param(struct lua_State * lua)
     struct kv_param * newly_param;
 
     protocol = lua_touserdata(lua, 1);
-    if (__protocol_legal(protocol))
+    if (!__protocol_legal(protocol))
         return 0;
     req = (struct http_req_protocol *) protocol->ptr;
     key = lua_tostring(lua, 2);
@@ -103,7 +103,7 @@ static int __lua_get_request_body(struct lua_State * lua)
     struct http_req_protocol * req;
 
     protocol = lua_touserdata(lua, 1);
-    if (__protocol_legal(protocol))
+    if (!__protocol_legal(protocol))
         return 0;
     req = (struct http_req_protocol *) protocol->ptr;
 
@@ -112,9 +112,32 @@ static int __lua_get_request_body(struct lua_State * lua)
     return 1;
 }
 
+static int __lua_get_request_querystring(struct lua_State * lua)
+{
+    struct lua_http_protocol * protocol;
+    struct http_req_protocol * req;
+    char * delimiter;
+
+    protocol = lua_touserdata(lua, 1);
+    if (!__protocol_legal(protocol))
+        return 0;
+    req = (struct http_req_protocol *) protocol->ptr;
+
+    delimiter = strchr(req->uri, '?');
+    if (delimiter == NULL) {
+        lua_pushstring(lua, "null");
+    }
+    else {
+        lua_pushstring(lua, delimiter);
+    }
+
+    return 1;
+}
+
 static struct luaL_Reg __methods[] = {
     { "get_uri", __lua_get_request_uri },
     { "set_uri", __lua_set_request_uri },
+    { "get_querystring", __lua_get_request_querystring },
     { "get_param", __lua_get_request_param },
     { "set_param", __lua_set_request_param },
     { "get_body", __lua_get_request_body },
