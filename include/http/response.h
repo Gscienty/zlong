@@ -11,6 +11,7 @@
 
 struct http_res_protocol {
     short status_code;
+    char * description;
     enum http_version version;
     struct rbroot params;    
 

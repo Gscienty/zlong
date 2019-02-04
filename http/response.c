@@ -10,6 +10,7 @@ void zl_http_res_protocol_init(struct http_res_protocol * const res)
     res->payload              = NULL;
     res->payload_size         = 0;
     res->status_code          = 200;
+    res->description          = NULL;
     res->version              = HTTP_VERSION_1_1;
     res->tcp_payload          = NULL;
     res->tcp_payload_size     = 0;
@@ -159,7 +160,8 @@ static struct http_res_status_code_desc __desc[] = {
     { 502, "Bad Gateway" }
 };
 
-static bool __status_code_desc_serialize(struct http_res_protocol * const res)
+static bool
+__status_code_auto_desc_serialize(struct http_res_protocol * const res)
 {
     int end = sizeof(__desc) / sizeof(struct http_res_status_code_desc);
     int start = 0;
@@ -208,6 +210,37 @@ static bool __status_code_desc_serialize(struct http_res_protocol * const res)
     res->tcp_payload_writable += desc_size;
 
     return true;
+
+}
+
+static bool
+__status_code_spec_desc_serialize(struct http_res_protocol * const res)
+{
+    size_t desc_size = strlen(res->description) + 2;
+    size_t remain_size = __tcp_payload_remain(res);
+    while (desc_size > remain_size) {
+        if (!__tcp_payload_realloc(res))
+            return false;
+        remain_size = __tcp_payload_remain(res);
+    }
+
+    snprintf(__tcp_payload_position(res),
+             desc_size + 1,
+             "%s\r\n",
+             res->description);
+    res->tcp_payload_writable += desc_size;
+
+    return true;
+}
+
+static bool __status_code_desc_serialize(struct http_res_protocol * const res)
+{
+    if (res->description == NULL) {
+        return __status_code_auto_desc_serialize(res);
+    }
+    else {
+        return __status_code_spec_desc_serialize(res);
+    }
 }
 
 static struct http_res_version __versions[] = {
