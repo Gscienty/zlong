@@ -107,7 +107,7 @@ static int __lua_get_request_body(struct lua_State * lua)
         return 0;
     req = (struct http_req_protocol *) protocol->ptr;
 
-    lua_pushlstring(lua, req->payload, req->payload_size);
+    lua_pushstring(lua, req->payload);
 
     return 1;
 }
