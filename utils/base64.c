@@ -77,10 +77,7 @@ char * zl_base64_encode(int * ret_size, const char * src, int n)
         ret[ret_idx++] = __base64_byte_alpha[(int) b];
     }
 
-    for (; val_size < *ret_size; val_size++) {
-        ret[val_size] = '=';
-    }
+    for (; val_size < *ret_size; ret[val_size++] = '=');
     ret[val_size] = 0;
-
     return ret;
 }
