@@ -1,5 +1,7 @@
 #include "debug/console.h"
 #include "http/websocket.h"
+#include "http/interface.h"
+#include "utils/rbtree.h"
 #include "utils/kv_param.h"
 #include "utils/sha1.h"
 #include "utils/base64.h"
@@ -87,3 +89,34 @@ void zl_http_websocket_accept(struct http_req_protocol * const req,
                                    strdup("13"));
 }
 
+void
+zl_websocket_frame_parser_init(struct websocket_frame_parser * const parser)
+{
+    parser->payload_count = 0;
+    parser->stat = WEBSOCKET_FRAME_STAT_FIRST;
+}
+
+void zl_websocket_frame_init(struct websocket_frame * const frame)
+{
+    frame->finish = false;
+    frame->mask = 0;
+    frame->payload = NULL;
+    frame->payload_size = 0;
+}
+
+void zl_websocket_frame_reset(struct websocket_frame * const frame)
+{
+    if (frame->payload != NULL) {
+        free(frame->payload);
+    }
+    zl_websocket_frame_init(frame);
+}
+
+size_t
+zl_websocket_frame_parse(struct websocket_frame_parser * const parser,
+                         struct websocket_frame * const frame,
+                         const char *data,
+                         size_t len)
+{
+
+}
