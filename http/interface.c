@@ -32,7 +32,6 @@ static void __sessions_add(struct http_session_node * const session)
             flag = &flag_session->tcp_sock;
 
             if (&session->tcp_sock == flag) {
-                info("yami");
                 return;
             }
             else if (&session->tcp_sock < flag)
@@ -77,6 +76,8 @@ static void __session_init(struct http_session_node * const session,
     zl_http_req_protocol_init(&session->req_protocol);
     zl_http_res_protocol_init(&session->res_protocol);
     uv_tcp_init(loop, &session->tcp_sock);
+
+    session->is_websocket = false;
 
     session->buf = NULL;
     session->buf_size = 0;
@@ -159,6 +160,18 @@ static bool __session_respond(uv_stream_t * stream,
     return true;
 }
 
+static void __session_reset(uv_stream_t * stream,
+                            struct http_session_node * session)
+{
+        zl_http_req_parser_init(&session->parser);
+        zl_http_req_protocol_reset(&session->req_protocol);
+
+        if (!__session_respond(stream, session))
+            uv_close((uv_handle_t *) stream, __session_close);
+
+        zl_http_res_protocol_clear(&session->res_protocol);
+}
+
 static void __session_read(uv_stream_t * stream,
                            ssize_t nread,
                            const uv_buf_t * buf)
@@ -182,21 +195,18 @@ static void __session_read(uv_stream_t * stream,
 
     info("parse http request: %x", session);
 
-    zl_http_req_protocol_parse(&session->parser,
-                               &session->req_protocol,
-                               buf->base,
-                               nread);
-
-    if (session->parser.stat == HTTP_REQ_STAT_END) {
-        zl_webgateway_enter(&session->req_protocol, &session->res_protocol);
-
-        zl_http_req_parser_init(&session->parser);
-        zl_http_req_protocol_reset(&session->req_protocol);
-
-        if (!__session_respond(stream, session))
-            uv_close((uv_handle_t *) stream, __session_close);
-
-        zl_http_res_protocol_clear(&session->res_protocol);
+    if (session->is_websocket) {
+        // TODO parse websocket frame
+    }
+    else {
+        zl_http_req_protocol_parse(&session->parser,
+                                   &session->req_protocol,
+                                   buf->base,
+                                   nread);
+        if (session->parser.stat == HTTP_REQ_STAT_END) {
+            zl_webgateway_enter(session);
+            __session_reset(stream, session);
+        }
     }
 }
 

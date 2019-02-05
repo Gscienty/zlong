@@ -1,3 +1,4 @@
+#include "http/websocket.h"
 #include "http/web_gateway.h"
 #include "debug/console.h"
 #include "lua_engine/router.h"
@@ -26,11 +27,33 @@ static void __web_resource(struct http_req_protocol * const req,
     }
 }
 
-void zl_webgateway_enter(struct http_req_protocol * const req,
-                         struct http_res_protocol * const res)
+static void __http(struct http_session_node * const session)
 {
-    zl_http_res_protocol_init(res);
-    info("enter resource");
-    __web_resource(req, res);
-    zl_http_res_protocol_default_params(res);
+    if (zl_websocket_check(&session->req_protocol)) {
+        zl_websocket_accept(&session->req_protocol,
+                            &session->res_protocol);
+        session->is_websocket = true;
+    }
+    else {
+        zl_http_res_protocol_init(&session->res_protocol);
+        __web_resource(&session->req_protocol,
+                       &session->res_protocol);
+    }
+
+    zl_http_res_protocol_default_params(&session->res_protocol);
+}
+
+static void __websocket(struct http_session_node * const session)
+{
+
+}
+
+void zl_webgateway_enter(struct http_session_node * const session)
+{
+    if (session->is_websocket) {
+        __websocket(session);
+    }
+    else {
+        __http(session);
+    }
 }

@@ -26,6 +26,8 @@ struct http_session_node {
     struct http_res_protocol res_protocol;
     uv_write_t writer;
 
+    bool is_websocket;
+
     void * buf;
     size_t buf_size;
 };
