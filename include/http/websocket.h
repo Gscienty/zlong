@@ -3,7 +3,6 @@
 
 #include "http/request.h"
 #include "http/response.h"
-#include "http/interface.h"
 #include "utils/rbtree.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -36,8 +35,7 @@ enum websocket_frame_stat {
     WEBSOCKET_FRAME_STAT_MASK_4,
     WEBSOCKET_FRAME_STAT_PAYLOAD,
     WEBSOCKET_FRAME_STAT_END,
-    WEBSOCKET_FRAME_STAT_ERR,
-    WEBSOCKET_FRAME_STAT_NEXT
+    WEBSOCKET_FRAME_STAT_ERROR
 };
 
 struct websocket_frame_parser {
@@ -47,10 +45,18 @@ struct websocket_frame_parser {
 
 struct websocket_frame {
     bool finish;
-    uint8_t mask;
+    bool mask;
+    char mask_key[4];
+    enum zl_websocket_opcode opcode;
     char * payload;
     size_t payload_size;
+
+    char * tcp_payload;
+    size_t tcp_payload_writable;
+    size_t tcp_payload_size;
 };
+
+#define WEBSOCKET_TCP_PAYLOAD_BLOCK 4096
 
 bool zl_websocket_check(struct http_req_protocol * const req);
 
@@ -67,7 +73,9 @@ void zl_websocket_frame_reset(struct websocket_frame * const frame);
 size_t
 zl_websocket_frame_parse(struct websocket_frame_parser * const parser,
                          struct websocket_frame * const frame,
-                         const char *data,
+                         const unsigned char *data,
                          size_t len);
+
+bool zl_websocket_frame_serialize(struct websocket_frame * const frame);
 
 #endif

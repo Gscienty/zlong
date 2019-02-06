@@ -27,7 +27,7 @@ static void __web_resource(struct http_req_protocol * const req,
     }
 }
 
-static void __http(struct http_session_node * const session)
+static void __http(struct http_session * const session)
 {
     if (zl_websocket_check(&session->req_protocol)) {
         zl_websocket_accept(&session->req_protocol,
@@ -43,12 +43,12 @@ static void __http(struct http_session_node * const session)
     zl_http_res_protocol_default_params(&session->res_protocol);
 }
 
-static void __websocket(struct http_session_node * const session)
+static void __websocket(struct http_session * const session)
 {
-
+    (void) session;
 }
 
-void zl_webgateway_enter(struct http_session_node * const session)
+void zl_webgateway_enter(struct http_session * const session)
 {
     if (session->is_websocket) {
         __websocket(session);

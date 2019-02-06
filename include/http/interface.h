@@ -1,36 +1,8 @@
 #ifndef _ZL_HTTP_INTERFACE_H
 #define _ZL_HTTP_INTERFACE_H
 
-#include "http/request.h"
-#include "http/response.h"
-#include "utils/rbtree.h"
-#include <netinet/in.h>
+#include "session/session_storage.h"
 #include <uv.h>
-
-struct http {
-    union {
-        struct sockaddr_in v4;
-        struct sockaddr_in6 v6;
-    } addr;
-    unsigned int delay;
-    uv_loop_t event_looper;
-    uv_tcp_t tcp_handler;
-    int backlog;
-};
-
-struct http_session_node {
-    struct rbnode node;
-    uv_tcp_t tcp_sock;
-    struct http_req_parser parser;
-    struct http_req_protocol req_protocol;
-    struct http_res_protocol res_protocol;
-    uv_write_t writer;
-
-    bool is_websocket;
-
-    void * buf;
-    size_t buf_size;
-};
 
 /**
  * init http

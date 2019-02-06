@@ -3,6 +3,6 @@
 
 #include "http/interface.h"
 
-void zl_webgateway_enter(struct http_session_node * const session);
+void zl_webgateway_enter(struct http_session * const session);
 
 #endif
