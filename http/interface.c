@@ -19,9 +19,9 @@ int zl_http_init(struct http * const http)
         return -1;
     }
 
-    zl_session_register_fptr(zl_webgateway_enter,
-                             zl_websocket_frame_parse,
-                             zl_http_req_protocol_parse);
+    zl_session_register_webgetway_enter(zl_webgateway_enter);
+    zl_session_register_websocket_parser(zl_websocket_frame_parse);
+    zl_session_register_req_protocol_parser(zl_http_req_protocol_parse);
 
     ret = uv_tcp_init(&http->event_looper, &http->tcp_handler);
     if (ret < 0) {

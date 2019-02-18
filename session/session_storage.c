@@ -74,8 +74,8 @@ struct http_session * zl_sessions_find(uv_tcp_t * const tcp_sock)
     return container_of(session_node, struct http_session, node);
 }
 
-void zl_session_init(struct http_session * const session,
-                           uv_loop_t * loop)
+static void __session_init(struct http_session * const session,
+                              uv_loop_t * loop)
 {
     rbtree_node_init(&__sessions, &session->node);
     zl_http_req_parser_init(&session->parser);
@@ -254,7 +254,7 @@ void zl_session_new(uv_stream_t *server, int status)
         error("new session error: malloc failed");
         return;
     }
-    zl_session_init(session, server->loop);
+    __session_init(session, server->loop);
 
     ret = uv_accept(server, (uv_stream_t *) &session->tcp_sock);
     if (ret < 0) {
@@ -270,11 +270,17 @@ void zl_session_new(uv_stream_t *server, int status)
                   zl_session_read);
 }
 
-void zl_session_register_fptr(zl_webgateway_enter_fptr webgateway_enter,
-                              zl_websocket_frame_parse_fptr ws_frame_parser,
-                              zl_http_req_protocol_parse_fptr req_parser)
+void zl_session_register_webgetway_enter(zl_webgateway_enter_fptr fptr)
 {
-    __webgateway_fptr = webgateway_enter;
-    __websocket_frame_parse_fptr = ws_frame_parser;
-    __http_req_protocol_parse_fptr = req_parser;
+    __webgateway_fptr = fptr;
+}
+
+void zl_session_register_websocket_parser(zl_websocket_frame_parse_fptr fptr)
+{
+    __websocket_frame_parse_fptr = fptr;
+}
+
+void zl_session_register_req_protocol_parser(zl_http_req_protocol_parse_fptr fptr)
+{
+    __http_req_protocol_parse_fptr = fptr;
 }

@@ -45,15 +45,12 @@ typedef size_t
 typedef size_t
 (*zl_http_req_protocol_parse_fptr) (struct http_req_parser * const parser,
                                     struct http_req_protocol * const req,
-                                    const char *data,
+                                    const char * data,
                                     size_t len);
 
 void zl_sessions_add(struct http_session * const session);
 
 struct http_session * zl_sessions_find(uv_tcp_t * const tcp_sock);
-
-void zl_session_init(struct http_session * const session,
-                           uv_loop_t * loop);
 
 void zl_session_destory(struct http_session * const session);
 
@@ -79,8 +76,11 @@ void zl_session_read(uv_stream_t * stream,
 
 void zl_session_new(uv_stream_t *server, int status);
 
-void zl_session_register_fptr(zl_webgateway_enter_fptr webgateway_enter,
-                              zl_websocket_frame_parse_fptr ws_frame_parser,
-                              zl_http_req_protocol_parse_fptr req_parser);
+void zl_session_register_webgetway_enter(zl_webgateway_enter_fptr fptr);
+
+void zl_session_register_websocket_parser(zl_websocket_frame_parse_fptr fptr);
+
+void zl_session_register_req_protocol_parser(zl_http_req_protocol_parse_fptr fptr);
+
 
 #endif
