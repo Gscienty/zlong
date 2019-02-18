@@ -13,12 +13,12 @@ bool zl_websocket_check(struct http_req_protocol * const req)
     char * val;
 
     if ((val = zl_kv_param_dict_find(&req->params, "Upgrade")) == NULL
-        || strcpy(val, "websocket") != 0) {
+        || strcmp(val, "websocket") != 0) {
         return false;
     }
 
     if ((val = zl_kv_param_dict_find(&req->params, "Connection")) == NULL
-        || strcpy(val, "Upgrade") != 0) {
+        || strcmp(val, "Upgrade") != 0) {
         return false;
     }
 
@@ -162,7 +162,7 @@ zl_websocket_frame_parse(struct websocket_frame_parser * const parser,
 {
     size_t used_size = 0;    
     size_t readable;
-    char c;
+    uint8_t c;
 
     if (parser->stat == WEBSOCKET_FRAME_STAT_END
         || parser->stat == WEBSOCKET_FRAME_STAT_ERROR) {
@@ -183,7 +183,6 @@ zl_websocket_frame_parse(struct websocket_frame_parser * const parser,
             parser->payload_count += readable;
             if (parser->payload_count == frame->payload_size)
                 parser->stat = WEBSOCKET_FRAME_STAT_END;
-
             break;
         }
 
@@ -194,6 +193,7 @@ zl_websocket_frame_parse(struct websocket_frame_parser * const parser,
             break;
         case WEBSOCKET_FRAME_STAT_SECOND:
             __parse_second_byte(parser, frame, c);
+            break;
         case WEBSOCKET_FRAME_STAT_PAYLOAD_2_1:
             frame->payload_size = ((size_t) c) << 8;
             parser->stat = WEBSOCKET_FRAME_STAT_PAYLOAD_2_2;
