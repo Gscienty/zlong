@@ -1,8 +1,18 @@
 #ifndef _ZL_HTTP_INTERFACE_H
 #define _ZL_HTTP_INTERFACE_H
 
-#include "session/session_storage.h"
 #include <uv.h>
+
+struct http {
+    union {
+        struct sockaddr_in v4;
+        struct sockaddr_in6 v6;
+    } addr;
+    unsigned int delay;
+    uv_loop_t event_looper;
+    uv_tcp_t tcp_handler;
+    int backlog;
+};
 
 /**
  * init http
