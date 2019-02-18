@@ -128,6 +128,8 @@ void zl_session_read(uv_stream_t * stream,
                                          (unsigned char *) buf->base,
                                          nread);
             if (session->ws_parser.stat == WEBSOCKET_FRAME_STAT_END) {
+                info("parsed websocket frame");
+                __webgateway_fptr(session);
                 zl_session_websocket_reset(session);
             }
         }
@@ -143,6 +145,7 @@ void zl_session_read(uv_stream_t * stream,
                                            buf->base,
                                            nread);
             if (session->parser.stat == HTTP_REQ_STAT_END) {
+                info("parsed http req protocol");
                 __webgateway_fptr(session);
                 zl_session_http_reset(stream, session);
             }
