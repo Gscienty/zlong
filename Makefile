@@ -9,6 +9,7 @@ LOCAL_INCS = -I include/
 CARGS_INCS = -I cargs/include/
 INCS = $(LOCAL_INCS) $(CARGS_INCS)
 FLAG = -fPIC -shared
+DEBUG = -D=DEBUG
 DEBUG_SOURCES = debug/console.c 
 HTTP_SOURCES = http/config.c \
 			   http/interface.c \
@@ -38,7 +39,7 @@ SESSION_NAME = zlsession
 UTILS_NAME = zlutils
 
 BUILD_MODULE_OBJS = for source in $^; do \
-						$(CC) $(INCS) -c $$source -o `echo $$source | sed s/.c$$/.o/g`; \
+						$(CC) $(DEBUG) $(INCS) -c $$source -o `echo $$source | sed s/.c$$/.o/g`; \
 					done
 
 CLEAN_MODULE_OBJS = for source in `echo $^ | awk '{gsub(/\.c( |$$)/,".o ",$$0);print $$0}'`; do \
@@ -49,7 +50,7 @@ CLEAN_MODULE_OBJS = for source in `echo $^ | awk '{gsub(/\.c( |$$)/,".o ",$$0);p
 
 LUA_MODULES = request response
 
-BUILD_LUA_MODULE = $(CC) $(INCS) $(FLAG) lua_modules/$^.c \
+BUILD_LUA_MODULE = $(CC) $(DEBUG) $(INCS) $(FLAG) lua_modules/$^.c \
 				   $(UTILS_LIBS) $(LUA_LIBS) $(SESSION_LIBS) \
 				   -o $^.so
 CLEAN_LUA_MODULE = if [[ -e "$^.so" ]]; then \
@@ -98,12 +99,12 @@ clean_cargs:
 	cd cargs && $(MAKE) clean
 
 link_objs: build_objs
-	$(CC) `echo $(SOURCES) | awk '{gsub(/\.c( |$$)/,".o ",$$0);print $$0}'` \
+	$(CC) $(DEBUG) `echo $(SOURCES) | awk '{gsub(/\.c( |$$)/,".o ",$$0);print $$0}'` \
 		$(UTILS_LIBS) $(UV_LIBS) $(LUA_LIBS) $(CARGS_LIBS) $(SESSION_LIBS) \
 		-o $(SERVER_NAME)
 
 build_zlsession:
-	$(CC) $(FLAG) $(LOCAL_INCS) -o lib$(SESSION_NAME).so $(SESSION_SOURCES) $(UTILS_SOURCES) $(UV_LIBS)
+	$(CC) $(DEBUG) $(FLAG) $(LOCAL_INCS) -o lib$(SESSION_NAME).so $(SESSION_SOURCES) $(UTILS_SOURCES) $(UV_LIBS)
 
 clean_zlsession:
 	if [[ -e "lib$(SESSION_NAME).so" ]]; then \
@@ -111,7 +112,7 @@ clean_zlsession:
 	fi
 
 build_zlutils:
-	$(CC) $(FLAG) $(LOCAL_INCS) -o lib$(UTILS_NAME).so $(UTILS_SOURCES)
+	$(CC) $(DEBUG) $(FLAG) $(LOCAL_INCS) -o lib$(UTILS_NAME).so $(UTILS_SOURCES)
 
 clean_zlutils:
 	if [[ -e "lib$(UTILS_NAME).so" ]]; then \
