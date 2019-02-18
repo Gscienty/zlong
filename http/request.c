@@ -327,7 +327,6 @@ size_t zl_http_req_protocol_parse(struct http_req_parser * const parser,
     }
 
     info("parse finished, used_size: %ld", used_size);
-    info("%s", data + used_size);
 
     return used_size;
 }
