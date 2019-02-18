@@ -25,7 +25,8 @@ UTILS_SOURCES = utils/kv_param.c \
 			   utils/rbtree.c \
 			   utils/sha1.c \
 			   utils/base64.c
-SESSION_SOURCES = session/session_storage.c
+SESSION_SOURCES = session/session_storage.c \
+				  session/session_handler.c
 
 SOURCES = $(DEBUG_SOURCES) \
 		  $(HTTP_SOURCES) \
