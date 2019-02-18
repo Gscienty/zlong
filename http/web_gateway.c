@@ -30,11 +30,13 @@ static void __web_resource(struct http_req_protocol * const req,
 static void __http(struct http_session * const session)
 {
     if (zl_websocket_check(&session->req_protocol)) {
+        info("websocket handshake");
         zl_websocket_accept(&session->req_protocol,
                             &session->res_protocol);
         session->is_websocket = true;
     }
     else {
+        info("normal http");
         zl_http_res_protocol_init(&session->res_protocol);
         __web_resource(&session->req_protocol,
                        &session->res_protocol);
@@ -46,6 +48,7 @@ static void __http(struct http_session * const session)
 static void __websocket(struct http_session * const session)
 {
     (void) session;
+    printf("WEBSOCKET\n");
 }
 
 void zl_webgateway_enter(struct http_session * const session)
