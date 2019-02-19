@@ -33,38 +33,38 @@ static struct lua_State * __open_lua_state(const char * script_path)
     return lua;
 }
 
-static void __wrap_http_protocol(struct lua_State * lua,
-                                 struct http_req_protocol * const req,
-                                 struct http_res_protocol * const res)
+static void __wrap_session(struct lua_State * lua,
+                           struct http_session * const session)
 {
-    struct lua_http_protocol * req_wrap =
-        lua_newuserdata(lua, sizeof(struct lua_http_protocol));
-    struct lua_http_protocol * res_wrap = 
-        lua_newuserdata(lua, sizeof(struct lua_http_protocol));
+    struct http_session ** session_wrapper =
+        lua_newuserdata(lua, sizeof(struct http_session *));
 
-    req_wrap->type = LUA_HTTP_PROTOCOL_TYPE_REQ;
-    req_wrap->ptr  = req;
-    res_wrap->type = LUA_HTTP_PROTOCOL_TYPE_RES;
-    res_wrap->ptr  = res;
+    *session_wrapper = session;
 }
 
 static void __call_func(struct lua_State * lua,
-                        struct http_req_protocol * const req,
-                        struct http_res_protocol * const res)
+                        struct http_session * const session)
 {
+    int ret;
     lua_settop(lua, 0);
-    lua_getglobal(lua, __func_name(req));
-    __wrap_http_protocol(lua, req, res);
+    if (session->is_websocket) {
+        lua_getglobal(lua, "websocket");
+    }
+    else {
+        lua_getglobal(lua, __func_name(&session->req_protocol));
+    }
+    __wrap_session(lua, session);
 
-    lua_pcall(lua, 2, 0, 0);
+    ret = lua_pcall(lua, 1, 0, 0);
+
+    info("lua exec ret: %d", ret);
 }
 
 void zl_lua_engine_call(const char * script_path,
-                        struct http_req_protocol * const req,
-                        struct http_res_protocol * const res)
+                             struct http_session * const session)
 {
     struct lua_State * lua;
     lua = __open_lua_state(script_path);
-    __call_func(lua, req, res);
+    __call_func(lua, session);
     lua_close(lua);
 }

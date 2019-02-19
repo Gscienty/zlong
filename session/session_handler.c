@@ -49,6 +49,7 @@ void zl_session_close(uv_handle_t * handle)
     session = zl_sessions_find((uv_tcp_t *) handle);
     if (session == NULL)
         return;
+    info("close session[%x]", session);
 
     zl_session_destory(session);
 }
@@ -113,7 +114,6 @@ void zl_session_read(uv_stream_t * stream,
     }
 
     if (nread <= 0 && nread != EAGAIN) {
-        info("close session[%x]", session);
         uv_close((uv_handle_t *) stream, zl_session_close);
         return;
     }
