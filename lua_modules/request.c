@@ -1,3 +1,4 @@
+#include "session/http_session.h"
 #include "lua_engine/caller.h"
 #include "utils/kv_param.h"
 #include <string.h>
@@ -7,47 +8,34 @@
 #include <lualib.h>
 #include <lauxlib.h>
 
-static const char * __uri(struct http_req_protocol * const req)
+static const char * __uri(struct http_session * const session)
 {
-    return req->uri;
+    return session->req_protocol.uri;
 }
 
-static const char * __param(struct http_req_protocol * const req,
+static const char * __param(struct http_session * const session,
                           const char * const key)
 {
-    return zl_kv_param_dict_find(&req->params, key);
-}
-
-static bool __protocol_legal(struct lua_http_protocol * const protocol)
-{
-    return protocol != NULL || protocol->type == LUA_HTTP_PROTOCOL_TYPE_REQ;
+    return zl_kv_param_dict_find(&session->req_protocol.params, key);
 }
 
 static int __lua_get_request_uri(struct lua_State * lua)
 {
-    struct lua_http_protocol * protocol;
-    
-    protocol = lua_touserdata(lua, 1);
-    if (!__protocol_legal(protocol))
-        return 0;
+    struct http_session ** session_wrapper;
+    session_wrapper = lua_touserdata(lua, 1);
 
-    lua_pushstring(lua, __uri((struct http_req_protocol *) protocol->ptr));
+    lua_pushstring(lua, __uri(*session_wrapper));
 
     return 1;
 }
 
 static int __lua_set_request_uri(struct lua_State * lua)
 {
-    struct lua_http_protocol * protocol;
-    struct http_req_protocol * req;
+    struct http_session ** session_wrapper;
+    session_wrapper = lua_touserdata(lua, 1);
 
-    protocol = lua_touserdata(lua, 1);
-    if (!__protocol_legal(protocol))
-        return 0;
-    req = (struct http_req_protocol *) protocol->ptr;
-
-    free(req->uri);
-    req->uri = strdup(lua_tostring(lua, 2));
+    free((*session_wrapper)->req_protocol.uri);
+    (*session_wrapper)->req_protocol.uri = strdup(lua_tostring(lua, 2));
 
     return 1;
 }
@@ -56,14 +44,13 @@ static int __lua_get_request_param(struct lua_State * lua)
 {
     const char * val;
     const char * key;
-    struct lua_http_protocol * protocol;
+    struct http_session ** session_wrapper;
+    session_wrapper = lua_touserdata(lua, 1);
     
-    protocol = lua_touserdata(lua, 1);
-    if (!__protocol_legal(protocol))
-        return 0;
+    session_wrapper = lua_touserdata(lua, 1);
     key = lua_tostring(lua, 2);
 
-    val = __param((struct http_req_protocol *) protocol->ptr, key);
+    val = __param(*session_wrapper , key);
 
     if (val == NULL) {
         lua_pushnil(lua);
@@ -78,52 +65,36 @@ static int __lua_get_request_param(struct lua_State * lua)
 static int __lua_set_request_param(struct lua_State * lua)
 {
     const char * key;
-    struct lua_http_protocol * protocol;
-    struct http_req_protocol * req;
+    struct http_session ** session_wrapper;
     struct kv_param * newly_param;
-
-    protocol = lua_touserdata(lua, 1);
-    if (!__protocol_legal(protocol))
-        return 0;
-    req = (struct http_req_protocol *) protocol->ptr;
+    session_wrapper = lua_touserdata(lua, 1);
     key = lua_tostring(lua, 2);
 
-    zl_kv_param_dict_delete(&req->params, key);
-
+    zl_kv_param_dict_delete(&(*session_wrapper)->req_protocol.params, key);
     newly_param = (struct kv_param *) malloc(sizeof(struct kv_param));
     zl_kv_param_set(newly_param, (char *) key, (char *) lua_tostring(lua, 3));
-    zl_kv_param_dict_add(&req->params, newly_param);
+    zl_kv_param_dict_add(&(*session_wrapper)->req_protocol.params, newly_param);
 
     return 1;
 }
 
 static int __lua_get_request_body(struct lua_State * lua)
 {
-    struct lua_http_protocol * protocol;
-    struct http_req_protocol * req;
+    struct http_session ** session_wrapper;
+    session_wrapper = lua_touserdata(lua, 1);
 
-    protocol = lua_touserdata(lua, 1);
-    if (!__protocol_legal(protocol))
-        return 0;
-    req = (struct http_req_protocol *) protocol->ptr;
-
-    lua_pushstring(lua, req->payload);
+    lua_pushstring(lua, (*session_wrapper)->req_protocol.payload);
 
     return 1;
 }
 
 static int __lua_get_request_querystring(struct lua_State * lua)
 {
-    struct lua_http_protocol * protocol;
-    struct http_req_protocol * req;
+    struct http_session ** session_wrapper;
     char * delimiter;
+    session_wrapper = lua_touserdata(lua, 1);
 
-    protocol = lua_touserdata(lua, 1);
-    if (!__protocol_legal(protocol))
-        return 0;
-    req = (struct http_req_protocol *) protocol->ptr;
-
-    delimiter = strchr(req->uri, '?');
+    delimiter = strchr((*session_wrapper)->req_protocol.uri, '?');
     if (delimiter == NULL) {
         lua_pushstring(lua, "null");
     }
