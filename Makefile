@@ -48,7 +48,7 @@ CLEAN_MODULE_OBJS = for source in `echo $^ | awk '{gsub(/\.c( |$$)/,".o ",$$0);p
 						fi; \
 					done
 
-LUA_MODULES = request response
+LUA_MODULES = request response websocket_frame
 
 BUILD_LUA_MODULE = $(CC) $(DEBUG) $(INCS) $(FLAG) lua_modules/$^.c \
 				   $(UTILS_LIBS) $(LUA_LIBS) $(SESSION_LIBS) \
