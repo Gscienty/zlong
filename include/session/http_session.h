@@ -5,8 +5,15 @@
 #include "http/request.h"
 #include "http/response.h"
 #include "http/websocket.h"
-
+#include <openssl/ssl.h>
 #include <uv.h>
+
+enum http_session_tls_state {
+    HTTP_SESSION_TLS_STATE_INIT,
+    HTTP_SESSION_TLS_STATE_HANDSHAKE,
+    HTTP_SESSION_TLS_STATE_IO,
+    HTTP_SESSION_TLS_STATE_CLOSING
+};
 
 struct http_session {
     struct rbnode node;
@@ -23,6 +30,12 @@ struct http_session {
 
     void * buf;
     size_t buf_size;
+
+    bool security;
+    SSL * ssl;
+    enum http_session_tls_state ssl_state;
+    BIO * write_bio;
+    BIO * read_bio;
 };
 
 #endif
