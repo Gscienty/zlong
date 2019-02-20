@@ -12,8 +12,6 @@ void zl_session_readbuf_alloc(uv_handle_t * handle,
 
 void zl_session_close(uv_handle_t * handle);
 
-void zl_session_write(uv_write_t *req, int status);
-
 bool zl_session_http_respond(uv_stream_t * stream,
                              struct http_session * const session);
 

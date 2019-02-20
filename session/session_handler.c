@@ -61,7 +61,7 @@ void zl_session_close(uv_handle_t * handle)
     zl_session_destory(session);
 }
 
-void zl_session_write(uv_write_t *req, int status)
+static void __session_write(uv_write_t *req, int status)
 {
     (void) req;
     if (status < 0)
@@ -90,7 +90,7 @@ bool zl_session_http_respond(uv_stream_t * stream,
         buf.len  = session->res_protocol.tcp_payload_writable;
     }
 
-    uv_write(&session->writer, stream, &buf, 1, zl_session_write);
+    uv_write(&session->writer, stream, &buf, 1, __session_write);
 
     session->res_protocol.tcp_payload          = NULL;
     session->res_protocol.tcp_payload_size     = 0;
@@ -212,7 +212,7 @@ static bool __session_security_init(struct http_session * const session)
             uv_write(&session->writer,
                      (uv_stream_t *) &session->tcp_sock,
                      &handshake_buf, 1,
-                     zl_session_write);
+                     __session_write);
         }
         if(session->ssl_state != HTTP_SESSION_TLS_STATE_IO) {
             if (session->ssl_state == HTTP_SESSION_TLS_STATE_CLOSING) {
