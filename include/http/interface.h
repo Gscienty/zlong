@@ -2,6 +2,7 @@
 #define _ZL_HTTP_INTERFACE_H
 
 #include <uv.h>
+#include <openssl/ssl.h>
 
 struct http {
     union {
@@ -12,6 +13,8 @@ struct http {
     uv_loop_t event_looper;
     uv_tcp_t tcp_handler;
     int backlog;
+
+    SSL_CTX * ctx;
 };
 
 /**
