@@ -55,9 +55,9 @@ bool zl_debug_config_warn();
  */
 bool zl_debug_config_error();
 
-#define ZL_CONL_COLOR_RED    "\033[1;31m""]"
-#define ZL_CONL_COLOR_WHITE  "\033[1;37m""]"
-#define ZL_CONL_COLOR_YELLOW "\033[1;33m""]"
+#define ZL_CONL_COLOR_RED    "\033[1;31m"
+#define ZL_CONL_COLOR_WHITE  "\033[1;37m"
+#define ZL_CONL_COLOR_YELLOW "\033[1;33m"
 
 #ifdef DEBUG
 
@@ -82,7 +82,7 @@ bool zl_debug_config_error();
 #define error(format, ...) ({ \
     if (zl_debug_config_error()) \
         fprintf(stderr, \
-                ZL_CONL_COLOR_RED "[ERROR]" ZL_CONL_COLOR_RED \
+                ZL_CONL_COLOR_RED "[ERROR]" ZL_CONL_COLOR_WHITE \
                 " file: \"" __FILE__ "\". " format "\n", \
                 ##__VA_ARGS__); \
                             })
