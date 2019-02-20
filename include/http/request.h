@@ -91,7 +91,7 @@ void zl_http_req_protocol_reset(struct http_req_protocol * const req);
  */
 size_t zl_http_req_protocol_parse(struct http_req_parser * const parser,
                                   struct http_req_protocol * const req,
-                                  const char *data,
+                                  const unsigned char * data,
                                   size_t len);
 
 #endif

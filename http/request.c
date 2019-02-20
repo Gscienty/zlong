@@ -162,7 +162,7 @@ static bool __parse_header_param(struct http_req_parser * const parser,
 
 static size_t __parse_header(struct http_req_parser * const parser,
                              struct http_req_protocol * const req,
-                             const char * data,
+                             const unsigned char * data,
                              size_t len)
 {
     size_t used_size = 0;
@@ -251,7 +251,7 @@ static size_t __parse_header(struct http_req_parser * const parser,
 
 static size_t __parse_raw(struct http_req_parser * const parser,
                           struct http_req_protocol * const req,
-                          const char *data,
+                          const unsigned char *data,
                           size_t len)
 {
     size_t readable_size;
@@ -282,7 +282,7 @@ static size_t __parse_raw(struct http_req_parser * const parser,
  */
 size_t zl_http_req_protocol_parse(struct http_req_parser * const parser,
                                   struct http_req_protocol * const req,
-                                  const char *data,
+                                  const unsigned char * data,
                                   size_t len)
 {
     const char * content_length;
