@@ -13,6 +13,9 @@ void zl_config_init()
     __config.port        = 0;
     __config.script_path = NULL;
     __config.route_path  = NULL;
+    __config.security    = false;
+    __config.cert        = NULL;
+    __config.key         = NULL;
 }
 
 /**

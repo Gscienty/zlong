@@ -9,6 +9,9 @@ struct config {
     uint16_t port;
     const char * script_path;
     const char * route_path;
+    bool security;
+    const char * cert;
+    const char * key;
 };
 
 /**
