@@ -12,7 +12,7 @@ typedef size_t
 typedef size_t
 (*zl_http_req_protocol_parse_fptr) (struct http_req_parser * const parser,
                                     struct http_req_protocol * const req,
-                                    const char * data,
+                                    const unsigned char * data,
                                     size_t len);
 
 void zl_sessions_init();
