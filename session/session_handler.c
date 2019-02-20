@@ -191,14 +191,10 @@ static bool __session_security_handshake(struct http_session * const session)
     }
 }
 
-static void __session_security_read(struct http_session * const session,
-                                    ssize_t nread,
-                                    uv_buf_t * buf)
+static bool __session_security_init(struct http_session * const session)
 {
     int rc;
     uv_buf_t handshake_buf;
-    rc = BIO_write(session->read_bio, buf->base, nread);
-
     if (session->ssl_state == HTTP_SESSION_TLS_STATE_INIT
         || session->ssl_state == HTTP_SESSION_TLS_STATE_HANDSHAKE) {
         __session_security_handshake(session);
@@ -222,23 +218,42 @@ static void __session_security_read(struct http_session * const session,
             if (session->ssl_state == HTTP_SESSION_TLS_STATE_CLOSING) {
                 zl_session_close((uv_handle_t *) &session->tcp_sock);
             }
-            return;
+            return false;
         }
     }
+    return true;
+}
 
+static void __session_security_read_data(struct http_session * const session,
+                                         uv_buf_t * buf)
+{
+    int rc;
     rc = SSL_read(session->ssl, buf->base, buf->len);
     info("readed size: %d", rc);
     if (rc <= 0) {
         if (rc == 0) {
-            zl_session_close((uv_handle_t *) &session->tcp_sock);
+            uv_close((uv_handle_t *) &session->tcp_sock, zl_session_close);
         }
         else if (SSL_get_error(session->ssl, rc) != SSL_ERROR_WANT_READ) {
             error("session[%x] tls read error (part 2)", session);
-            zl_session_close((uv_handle_t *) &session->tcp_sock);
+            uv_close((uv_handle_t *) &session->tcp_sock, zl_session_close);
         }
         return;
     }
     __session_enter_app(session, rc, buf);
+}
+
+static void __session_security_read(struct http_session * const session,
+                                    ssize_t nread,
+                                    uv_buf_t * buf)
+{
+    int rc;
+    rc = BIO_write(session->read_bio, buf->base, nread);
+    if (!__session_security_init(session)) {
+        return;
+    }
+
+    __session_security_read_data(session, buf);
 }
 
 void zl_session_read(uv_stream_t * stream,
