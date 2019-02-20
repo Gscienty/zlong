@@ -2,6 +2,7 @@
 #define _ZL_SESSION_SESSION_HANDLER_H
 
 #include "session/session_storage.h"
+#include <openssl/ssl.h>
 
 void zl_session_destory(struct http_session * const session);
 
@@ -16,9 +17,6 @@ void zl_session_write(uv_write_t *req, int status);
 bool zl_session_http_respond(uv_stream_t * stream,
                              struct http_session * const session);
 
-void zl_session_http_reset(uv_stream_t * stream,
-                           struct http_session * session);
-
 void zl_session_websocket_reset(struct http_session * session);
 
 void zl_session_read(uv_stream_t * stream,
@@ -32,5 +30,6 @@ void zl_session_register_webgetway_enter(zl_webgateway_enter_fptr fptr);
 void zl_session_register_websocket_parser(zl_websocket_frame_parse_fptr fptr);
 
 void zl_session_register_req_protocol_parser(zl_http_req_protocol_parse_fptr fptr);
+
 
 #endif
