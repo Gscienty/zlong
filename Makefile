@@ -4,6 +4,8 @@ UTILS_LIBS = -L ./ -lzlutils
 UV_LIBS = -luv -lpthread
 LUA_LIBS = -L ./ -llua -ldl -lm
 CARGS_LIBS = -L ./cargs -lcargs 
+SSL_LIBS = -lssl
+CRYPTO_LIBS = -lcrypto
 SESSION_LIBS = -L ./ -l$(SESSION_NAME)
 LOCAL_INCS = -I include/
 CARGS_INCS = -I cargs/include/
@@ -20,6 +22,7 @@ HTTP_SOURCES = http/config.c \
 LUA_ENGINE_SOURCES = lua_engine/call.c \
 					 lua_engine/router.c
 SERVER_SOURCES = server/http.c \
+				 server/https.c \
 				server/main.c
 UTILS_SOURCES = utils/kv_param.c \
 			   utils/linked_list.c \
@@ -51,7 +54,7 @@ CLEAN_MODULE_OBJS = for source in `echo $^ | awk '{gsub(/\.c( |$$)/,".o ",$$0);p
 LUA_MODULES = request response websocket_frame
 
 BUILD_LUA_MODULE = $(CC) $(DEBUG) $(INCS) $(FLAG) lua_modules/$^.c \
-				   $(UTILS_LIBS) $(LUA_LIBS) $(SESSION_LIBS) \
+				   $(UTILS_LIBS) $(LUA_LIBS) $(SESSION_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) \
 				   -o $^.so
 CLEAN_LUA_MODULE = if [[ -e "$^.so" ]]; then \
 				   		rm "$^.so"; \
@@ -100,7 +103,7 @@ clean_cargs:
 
 link_objs: build_objs
 	$(CC) $(DEBUG) `echo $(SOURCES) | awk '{gsub(/\.c( |$$)/,".o ",$$0);print $$0}'` \
-		$(UTILS_LIBS) $(UV_LIBS) $(LUA_LIBS) $(CARGS_LIBS) $(SESSION_LIBS) \
+		$(UTILS_LIBS) $(UV_LIBS) $(LUA_LIBS) $(CARGS_LIBS) $(SESSION_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) \
 		-o $(SERVER_NAME)
 
 build_zlsession:
