@@ -119,7 +119,7 @@ build_objs: build_debug \
 clean_obj: clean_debug \
 	clean_http \
 	clean_lua_engine \
-	clean_server \
+	clean_server
 
 build_debug: $(DEBUG_SOURCES)
 	$(BUILD_MODULE_OBJS)
