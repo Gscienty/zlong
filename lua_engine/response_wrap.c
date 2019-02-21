@@ -72,8 +72,6 @@ static int __set_string_body(struct lua_State * lua)
     (*res_wrapper)->payload_size = strlen(val);
     (*res_wrapper)->payload = strdup(val);
 
-    info("%s", (*res_wrapper)->payload);
-
     return 1;
 }
 
