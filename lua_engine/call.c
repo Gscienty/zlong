@@ -1,4 +1,5 @@
 #include "debug/console.h"
+#include "lua_engine/obj_wraper.h"
 #include "lua_engine/caller.h"
 #include <lua.h>
 #include <lualib.h>
@@ -30,6 +31,14 @@ static struct lua_State * __open_lua_state(const char * script_path)
     luaL_openlibs(lua);
     luaL_dofile(lua, script_path);
 
+    luaL_newmetatable(lua, "zl_session");
+    lua_pushvalue(lua, -1);
+    lua_setfield(lua, -2, "__index");
+
+    zl_lua_register_request_metatable(lua);
+    zl_lua_register_response_metatable(lua);
+    zl_lua_register_session_metatable(lua);
+
     return lua;
 }
 
@@ -38,6 +47,8 @@ static void __wrap_session(struct lua_State * lua,
 {
     struct http_session ** session_wrapper =
         lua_newuserdata(lua, sizeof(struct http_session *));
+    luaL_getmetatable(lua, "zl_session");
+    lua_setmetatable(lua, -2);
 
     *session_wrapper = session;
 }
@@ -54,9 +65,7 @@ static void __call_func(struct lua_State * lua,
         lua_getglobal(lua, __func_name(&session->req_protocol));
     }
     __wrap_session(lua, session);
-
     ret = lua_pcall(lua, 1, 0, 0);
-
     info("lua exec ret: %d", ret);
 }
 
