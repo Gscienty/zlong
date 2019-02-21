@@ -20,7 +20,10 @@ HTTP_SOURCES = http/config.c \
 			   http/web_gateway.c \
 			   http/websocket.c
 LUA_ENGINE_SOURCES = lua_engine/call.c \
-					 lua_engine/router.c
+					 lua_engine/router.c \
+					 lua_engine/request_wrap.c \
+					 lua_engine/response_wrap.c \
+					 lua_engine/session_wrap.c 
 SERVER_SOURCES = server/http.c \
 				 server/https.c \
 				server/main.c
@@ -76,23 +79,9 @@ clean: clean_cargs \
 		rm "$(SERVER_NAME)"; \
 	fi
 
-build_lua_module: build_lua_module_request \
-	build_lua_module_response
+build_lua_module: 
 
-clean_lua_module: clean_lua_module_request \
-	clean_lua_module_response
-
-build_lua_module_request: request
-	$(BUILD_LUA_MODULE)
-
-clean_lua_module_request: request
-	$(CLEAN_LUA_MODULE)
-
-build_lua_module_response: response
-	$(BUILD_LUA_MODULE)
-
-clean_lua_module_response: response
-	$(CLEAN_LUA_MODULE)
+clean_lua_module: 
 
 build_cargs:
 	git submodule update --init --recursive
