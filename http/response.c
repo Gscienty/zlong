@@ -29,6 +29,8 @@ void zl_http_res_protocol_clear(struct http_res_protocol * const res)
         res->tcp_payload = NULL;
     }
     zl_kv_param_dict_clear(&res->params);
+
+    zl_http_res_protocol_init(res);
 }
 
 void zl_http_res_protocol_add_param(struct http_res_protocol * const res,
