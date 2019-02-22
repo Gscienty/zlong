@@ -73,13 +73,9 @@ struct http_session_writable_node * __new_session_writable_node()
 
 void zl_session_close(uv_handle_t * handle)
 {
-    struct http_session * session;
-
-    session = zl_sessions_find((uv_tcp_t *) handle);
-    if (session == NULL)
-        return;
+    struct http_session * session =
+        container_of(handle, struct http_session, tcp_sock);
     info("close session[%x]", session);
-
     zl_session_destory(session);
 }
 
@@ -97,7 +93,6 @@ static void __session_write(uv_write_t * req, int status)
         warn("write error %d", status);
         return;
     }
-
 }
 
 bool zl_session_http_respond(uv_stream_t * stream,
@@ -142,8 +137,10 @@ static void __http_flush(uv_stream_t * stream,
     }
     zl_http_req_parser_init(&session->parser);
 
-    if (!zl_session_http_respond(stream, session))
+    if (!zl_session_http_respond(stream, session)) {
         uv_close((uv_handle_t *) stream, zl_session_close);
+        return;
+    }
 
     zl_http_res_protocol_clear(&session->res_protocol);
 }
