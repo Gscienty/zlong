@@ -2,6 +2,9 @@
 #include "cargs.h" 
 #include "server/main.h"
 #include "debug/console.h"
+#ifdef DEBUG
+#include <mcheck.h>
+#endif
 
 /**
  * run common http
@@ -27,6 +30,10 @@ void http_common_runner()
 
 int main(int argc, char ** argv)
 {
+#ifdef DEBUG
+    setenv("MALLOC_TRACE", "trace.log", 1);
+    mtrace();
+#endif
     zl_debug_config_init();
     zl_debug_config_info_switch(true);
     zl_debug_config_error_switch(true);
