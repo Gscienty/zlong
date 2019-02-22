@@ -50,8 +50,9 @@ void zl_http_req_protocol_reset(struct http_req_protocol * const req)
     if (req->payload != NULL)
         free(req->payload);
 
+    info("req params clear");
     zl_kv_param_dict_clear(&req->params);
-
+    
     zl_http_req_protocol_init(req);
 }
 
@@ -137,6 +138,7 @@ static bool __req_param_append(struct http_req_protocol * const req,
     delimiter += 2;
 
     zl_kv_param_set(param, strdup(parser->param), strdup(delimiter));
+    info("req append param %s: %s", parser->param, delimiter);
 
     if (!zl_kv_param_dict_add(&req->params, param)) {
         error("append param error[add dict failed]: %s", parser->param);
