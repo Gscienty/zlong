@@ -38,6 +38,7 @@ void zl_kv_param_dict_clear(struct rbroot * const root)
     while (node != &root->nil) {
         param = container_of(node, struct kv_param, node);
 
+        info("param clear %s: %s", param->key, param->val);
         zl_kv_param_clear(param);
         rbtree_delete(root, node);
         free(param);
