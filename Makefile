@@ -11,7 +11,7 @@ LOCAL_INCS = -I include/
 CARGS_INCS = -I cargs/include/
 INCS = $(LOCAL_INCS) $(CARGS_INCS)
 FLAG = -fPIC -shared
-DEBUG = -D=DEBUG
+DEBUG = -D=DEBUG -g
 DEBUG_SOURCES = debug/console.c 
 HTTP_SOURCES = http/config.c \
 			   http/interface.c \
