@@ -253,7 +253,7 @@ static bool __session_security_init(struct http_session * const session)
         }
         if(session->ssl_state != HTTP_SESSION_TLS_STATE_IO) {
             if (session->ssl_state == HTTP_SESSION_TLS_STATE_CLOSING) {
-                zl_session_close((uv_handle_t *) &session->tcp_sock);
+                uv_close((uv_handle_t *) &session->tcp_sock, zl_session_close);
             }
             return false;
         }
@@ -358,9 +358,26 @@ static void __session_ssl_init(uv_stream_t * server,
     SSL_set_bio(session->ssl, session->read_bio, session->write_bio);
 }
 
+void __thread_work(uv_work_t * req)
+{
+    struct http_session * session =
+        container_of(req, struct http_session, worker);
+
+    uv_read_start((uv_stream_t *) &session->tcp_sock,
+                  zl_session_readbuf_alloc,
+                  zl_session_read);
+}
+
+void __thread_after_work(uv_work_t * req, int status)
+{
+    (void) req;
+    (void) status;
+}
+
 void zl_session_new(uv_stream_t * server, int status)
 {
     struct config * config = zl_config_get();
+    struct http * http = container_of(server, struct http, tcp_handler);
     int ret;
     if (status < 0) {
         error("new session error: %s", uv_strerror(status));
@@ -389,9 +406,10 @@ void zl_session_new(uv_stream_t * server, int status)
     info("accept a newly session[%x]", session);
     zl_sessions_add(session);
 
-    uv_read_start((uv_stream_t *) &session->tcp_sock,
-                  zl_session_readbuf_alloc,
-                  zl_session_read);
+    uv_queue_work(&http->event_looper,
+                  &session->worker,
+                  __thread_work,
+                  __thread_after_work);
 }
 
 void zl_session_register_webgetway_enter(zl_webgateway_enter_fptr fptr)

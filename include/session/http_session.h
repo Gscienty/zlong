@@ -44,6 +44,8 @@ struct http_session {
     BIO * read_bio;
 
     struct llnode writable_queue;
+
+    uv_work_t worker;
 };
 
 #endif
