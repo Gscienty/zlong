@@ -164,6 +164,7 @@ void __session_enter_app(struct http_session * const session,
                                          nread);
             if (session->ws_parser.stat == WEBSOCKET_FRAME_STAT_END) {
                 info("parsed websocket frame");
+                time(&session->last_active);
                 __webgateway_fptr(session);
                 zl_session_websocket_reset(session);
             }
@@ -181,6 +182,7 @@ void __session_enter_app(struct http_session * const session,
                                            nread);
             if (session->parser.stat == HTTP_REQ_STAT_END) {
                 info("parsed http req protocol");
+                time(&session->last_active);
                 __webgateway_fptr(session);
                 __http_flush((uv_stream_t *) &session->tcp_sock, session);
             }
@@ -339,6 +341,8 @@ static void __session_init(struct http_session * const session,
     session->read_bio = NULL;
 
     ll_head_init(&session->writable_queue);
+
+    time(&session->last_active);
 }
 
 static void __session_ssl_init(uv_stream_t * server,
