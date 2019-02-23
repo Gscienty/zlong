@@ -4,4 +4,4 @@ libuv + lua 实现web应用服务框架。该框架通过libuv接收和发送TCP
 
 # TODO
 
-多线程支持、Encoding-Transfer、Timeout
+Encoding-Transfer
