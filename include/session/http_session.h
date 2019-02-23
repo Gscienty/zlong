@@ -8,6 +8,7 @@
 #include "http/websocket.h"
 #include <openssl/ssl.h>
 #include <uv.h>
+#include <time.h>
 
 enum http_session_tls_state {
     HTTP_SESSION_TLS_STATE_INIT,
@@ -46,6 +47,7 @@ struct http_session {
     struct llnode writable_queue;
 
     uv_work_t worker;
+    time_t last_active;
 };
 
 #endif
