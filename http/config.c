@@ -16,6 +16,7 @@ void zl_config_init()
     __config.security    = false;
     __config.cert        = NULL;
     __config.key         = NULL;
+    __config.lifetime    = 10;
 }
 
 /**

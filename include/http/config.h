@@ -12,6 +12,7 @@ struct config {
     bool security;
     const char * cert;
     const char * key;
+    int lifetime;
 };
 
 /**
