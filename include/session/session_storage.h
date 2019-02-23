@@ -15,15 +15,18 @@ typedef size_t
                                     const unsigned char * data,
                                     size_t len);
 
+typedef void (*zl_session_foreachor_fptr) (struct http_session * const session,
+                                           void * arg);
+
 void zl_sessions_init();
 
 void zl_sessions_add(struct http_session * const session);
 
-struct http_session * zl_sessions_find(uv_tcp_t * const tcp_sock);
-
 void zl_sessions_remove(struct http_session * const session);
 
 void zl_sessions_rbnode_init(struct rbnode * const node);
+
+void zl_sessions_foreach(zl_session_foreachor_fptr fptr, void * arg);
 
 
 #endif

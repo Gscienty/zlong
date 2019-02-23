@@ -46,31 +46,6 @@ void zl_sessions_add(struct http_session * const session)
     rbtree_fixup(&__sessions, &session->node);
 }
 
-struct http_session * zl_sessions_find(uv_tcp_t * const tcp_sock)
-{
-    struct rbnode * session_node;
-    struct http_session * session;
-    uv_tcp_t * flag;
-
-    session_node = __sessions.root;
-    while (session_node != &__sessions.nil) {
-        session = container_of(session_node, struct http_session, node);
-        flag = &session->tcp_sock;
-
-        if (tcp_sock == flag)
-            break;
-        else if (tcp_sock < flag)
-            session_node = session_node->left;
-        else
-            session_node = session_node->right;
-    }
-
-    if (session_node == &__sessions.nil) {
-        return NULL;
-    }
-    return container_of(session_node, struct http_session, node);
-}
-
 void zl_sessions_remove(struct http_session * const session)
 {
     rbtree_delete(&__sessions, &session->node);
@@ -79,4 +54,13 @@ void zl_sessions_remove(struct http_session * const session)
 void zl_sessions_rbnode_init(struct rbnode * const node)
 {
     rbtree_node_init(&__sessions, node);
+}
+
+void zl_sessions_foreach(zl_session_foreachor_fptr fptr, void * arg)
+{
+    struct rbnode * node = rbtree_first(&__sessions);
+    while (node != &__sessions.nil) {
+        fptr(container_of(node, struct http_session, node), arg);
+        node = rbtree_next(&__sessions, node);
+    }
 }
