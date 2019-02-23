@@ -19,12 +19,13 @@ void http_common_runner()
     http.addr.v4.sin_port = htons(config->port);
 
     http.backlog = 10;
-    http.delay = 10;
+    http.delay = config->lifetime;
 
     int ret;
     ret = zl_http_init(&http);
     if (ret < 0)
         return;
+
     zl_http_run(&http);
 }
 
