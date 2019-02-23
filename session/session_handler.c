@@ -84,6 +84,7 @@ static void __session_write(uv_write_t * req, int status)
     struct http_session_writable_node * node =
         container_of(req, struct http_session_writable_node, writer);
 
+    info("writed stream_write_queue_size: %d", node->writer.handle->write_queue_size);
     ll_remove(&node->node);
     if (node->buf.base != NULL) {
         free(node->buf.base);
@@ -95,13 +96,37 @@ static void __session_write(uv_write_t * req, int status)
     }
 }
 
+static void __security_respond(struct http_session * const session)
+{
+    uv_buf_t buf;
+    int readed_size;
+    struct http_session_writable_node * writable;
+    buf.base = malloc(4096);
+    buf.len = 4096;
+
+    while ((readed_size = BIO_read(session->write_bio, buf.base, buf.len)) > 0) {
+        writable =__new_session_writable_node();
+        ll_insert_before(&session->writable_queue, &writable->node);
+
+        writable->buf.len = readed_size;
+        info("security respond: %d", readed_size);
+        writable->buf.base = malloc(writable->buf.len);
+        memcpy(writable->buf.base, buf.base, readed_size);
+
+        info("stream_write_queue_size: %d", session->tcp_sock.write_queue_size);
+        uv_write(&writable->writer,
+                 (uv_stream_t *) &session->tcp_sock,
+                 &writable->buf, 1,
+                 __session_write);
+    }
+
+    free(buf.base);
+}
+
 bool zl_session_http_respond(uv_stream_t * stream,
                              struct http_session * const session)
 {
-    struct http_session_writable_node * writable =
-        __new_session_writable_node();
-    ll_insert_before(&session->writable_queue, &writable->node);
-    uv_buf_t * buf = &writable->buf;
+    struct http_session_writable_node * writable;
 
     if (!zl_http_res_protocol_serialize(&session->res_protocol)) {
         return false;
@@ -111,16 +136,20 @@ bool zl_session_http_respond(uv_stream_t * stream,
         SSL_write(session->ssl,
                   session->res_protocol.tcp_payload,
                   session->res_protocol.tcp_payload_size);
-        buf->len = session->res_protocol.tcp_payload_size + 1024;
-        buf->base = malloc(buf->len);
-        BIO_read(session->write_bio, buf->base, buf->len);
+
+        __security_respond(session);
     }
     else {
-        buf->base = session->res_protocol.tcp_payload;
-        buf->len  = session->res_protocol.tcp_payload_writable;
-    }
+        writable = __new_session_writable_node();
+        ll_insert_before(&session->writable_queue, &writable->node);
 
-    uv_write(&writable->writer, stream, buf, 1, __session_write);
+        writable->buf.base = session->res_protocol.tcp_payload;
+        writable->buf.len  = session->res_protocol.tcp_payload_writable;
+        uv_write(&writable->writer,
+                 stream,
+                 &writable->buf, 1,
+                 __session_write);
+    }
 
     session->res_protocol.tcp_payload          = NULL;
     session->res_protocol.tcp_payload_size     = 0;
@@ -227,31 +256,12 @@ static bool __session_security_handshake(struct http_session * const session)
 
 static bool __session_security_init(struct http_session * const session)
 {
-    int rc;
-    struct http_session_writable_node * writable =
-        __new_session_writable_node();
-    uv_buf_t * handshake_buf = &writable->buf;
-
-    ll_insert_before(&session->writable_queue, &writable->node);
-
     if (session->ssl_state == HTTP_SESSION_TLS_STATE_INIT
         || session->ssl_state == HTTP_SESSION_TLS_STATE_HANDSHAKE) {
         __session_security_handshake(session);
         if(session->ssl_state == HTTP_SESSION_TLS_STATE_HANDSHAKE
            || session->ssl_state == HTTP_SESSION_TLS_STATE_IO) {
-
-            handshake_buf->base = malloc(4096);
-            handshake_buf->len = 4096;
-
-            rc = BIO_read(session->write_bio,
-                          handshake_buf->base,
-                          handshake_buf->len);
-            handshake_buf->len = rc;
-
-            uv_write(&writable->writer,
-                     (uv_stream_t *) &session->tcp_sock,
-                     handshake_buf, 1,
-                     __session_write);
+            __security_respond(session);
         }
         if(session->ssl_state != HTTP_SESSION_TLS_STATE_IO) {
             if (session->ssl_state == HTTP_SESSION_TLS_STATE_CLOSING) {
@@ -381,7 +391,7 @@ void __thread_after_work(uv_work_t * req, int status)
 void zl_session_new(uv_stream_t * server, int status)
 {
     struct config * config = zl_config_get();
-    struct http * http = container_of(server, struct http, tcp_handler);
+    /*struct http * http = container_of(server, struct http, tcp_handler);*/
     int ret;
     if (status < 0) {
         error("new session error: %s", uv_strerror(status));
@@ -410,10 +420,13 @@ void zl_session_new(uv_stream_t * server, int status)
     info("accept a newly session[%x]", session);
     zl_sessions_add(session);
 
-    uv_queue_work(&http->event_looper,
-                  &session->worker,
-                  __thread_work,
-                  __thread_after_work);
+    uv_read_start((uv_stream_t *) &session->tcp_sock,
+                  zl_session_readbuf_alloc,
+                  zl_session_read);
+    /*uv_queue_work(&http->event_looper,*/
+                  /*&session->worker,*/
+                  /*__thread_work,*/
+                  /*__thread_after_work);*/
 }
 
 void zl_session_register_webgetway_enter(zl_webgateway_enter_fptr fptr)
