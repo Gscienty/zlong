@@ -262,3 +262,37 @@ int rbtree_delete(struct rbroot * const root, struct rbnode *node)
     return 0;
 }
 
+static struct rbnode * __first(struct rbroot * const root, struct rbnode * node)
+{
+    while (node != &root->nil && node->left != &root->nil) {
+        node = node->left;
+    }
+    return node;
+}
+
+struct rbnode * rbtree_first(struct rbroot * const root)
+{
+    return __first(root, root->root);
+}
+
+struct rbnode * rbtree_next(struct rbroot * const root, struct rbnode * node)
+{
+    struct rbnode * child_node;
+
+    if (node->right != &root->nil) {
+        return __first(root, node->right);
+    }
+    if (node != root->root) {
+        if (node->parent->left == node) {
+            return node->parent;
+        }
+        while (node != root->root && node->parent->right == node) {
+            child_node = node;
+            node = node->parent;
+        }
+        if (node->left == node) {
+            return node;
+        }
+    }
+    return &root->nil;
+}

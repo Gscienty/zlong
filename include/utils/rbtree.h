@@ -72,4 +72,8 @@ int rbtree_link(struct rbnode *parent, struct rbnode **child_ptr, struct rbnode 
  */
 int rbtree_delete(struct rbroot * const root, struct rbnode *node);
 
+struct rbnode * rbtree_first(struct rbroot * const root);
+
+struct rbnode * rbtree_next(struct rbroot * const root, struct rbnode * node);
+
 #endif
