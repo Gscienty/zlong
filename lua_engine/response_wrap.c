@@ -48,29 +48,40 @@ static int __get_param(struct lua_State * lua)
 
 static int __set_param(struct lua_State * lua)
 {
-    const char * key;
+    char * key;
+    char * val;
     struct http_res_protocol ** res_wrapper;
-    struct kv_param * newly_param;
     res_wrapper = lua_touserdata(lua, 1);
-    key = lua_tostring(lua, 2);
+    key = strdup(lua_tostring(lua, 2));
+    val = strdup(lua_tostring(lua, 3));
 
-    zl_kv_param_dict_delete(&(*res_wrapper)->params, key);
-    newly_param = (struct kv_param *) malloc(sizeof(struct kv_param));
-    zl_kv_param_set(newly_param, (char *) key, (char *) lua_tostring(lua, 3));
-    zl_kv_param_dict_add(&(*res_wrapper)->params, newly_param);
+    zl_http_res_protocol_add_param(*res_wrapper, key, val);
 
     return 1;
 }
 
-static int __set_string_body(struct lua_State * lua)
+static int __append_string_body(struct lua_State * lua)
 {
     struct http_res_protocol ** res_wrapper;
     const char * val;
+    size_t val_size;
     res_wrapper = lua_touserdata(lua, 1);
     val = lua_tostring(lua, 2);
+    val_size = strlen(val);
 
-    (*res_wrapper)->payload_size = strlen(val);
-    (*res_wrapper)->payload = strdup(val);
+    if ((*res_wrapper)->payload_size == 0) {
+        (*res_wrapper)->payload = strdup(val);
+        (*res_wrapper)->payload_size = val_size;
+    }
+    else {
+        (*res_wrapper)->payload =
+            realloc((*res_wrapper)->payload,
+                    (*res_wrapper)->payload_size + val_size);
+        memcpy((*res_wrapper)->payload + (*res_wrapper)->payload_size,
+               val,
+               val_size);
+        (*res_wrapper)->payload_size += val_size;
+    }
 
     return 1;
 }
@@ -79,7 +90,7 @@ static struct luaL_Reg __methods[] = {
     { "set_status_code", __set_status_code },
     { "get_param", __get_param },
     { "set_param", __set_param },
-    { "set_strbody", __set_string_body },
+    { "write", __append_string_body },
     { NULL, NULL }
 };
 
