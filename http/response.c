@@ -382,7 +382,7 @@ static bool __crlf_serialize(struct http_res_protocol * const res)
 static bool __content_serialize(struct http_res_protocol * const res)
 {
     size_t remain_size = __tcp_payload_remain(res);
-    while (res->payload_size > remain_size) {
+    while (res->payload_size + 1 > remain_size) {
         if (!__tcp_payload_realloc(res))
             return false;
         remain_size = __tcp_payload_remain(res);
@@ -391,6 +391,7 @@ static bool __content_serialize(struct http_res_protocol * const res)
     memcpy(__tcp_payload_position(res), res->payload, res->payload_size);
 
     res->tcp_payload_writable += res->payload_size;
+    ((char *) res->tcp_payload)[res->tcp_payload_writable] = 0;
     
     return true;
 }
