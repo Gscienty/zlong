@@ -392,7 +392,7 @@ void __thread_after_work(uv_work_t * req, int status)
 void zl_session_new(uv_stream_t * server, int status)
 {
     struct config * config = zl_config_get();
-    /*struct http * http = container_of(server, struct http, tcp_handler);*/
+    struct http * http = container_of(server, struct http, tcp_handler);
     int ret;
     if (status < 0) {
         error("new session error: %s", uv_strerror(status));
@@ -421,13 +421,10 @@ void zl_session_new(uv_stream_t * server, int status)
     info("accept a newly session[%x]", session);
     zl_sessions_add(session);
 
-    uv_read_start((uv_stream_t *) &session->tcp_sock,
-                  zl_session_readbuf_alloc,
-                  zl_session_read);
-    /*uv_queue_work(&http->event_looper,*/
-                  /*&session->worker,*/
-                  /*__thread_work,*/
-                  /*__thread_after_work);*/
+    uv_queue_work(&http->event_looper,
+                  &session->worker,
+                  __thread_work,
+                  __thread_after_work);
 }
 
 void zl_session_register_webgetway_enter(zl_webgateway_enter_fptr fptr)
