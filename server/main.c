@@ -2,6 +2,7 @@
 #include "cargs.h" 
 #include "server/main.h"
 #include "debug/console.h"
+#include <unistd.h>
 #ifdef DEBUG
 #include <mcheck.h>
 #endif
@@ -12,8 +13,10 @@
  */
 void http_common_runner()
 {
+    int ret;
     struct http http;
     struct config * config = zl_config_get();
+
     http.addr.v4.sin_family = AF_INET;
     http.addr.v4.sin_addr.s_addr = inet_addr(config->addr);
     http.addr.v4.sin_port = htons(config->port);
@@ -21,7 +24,8 @@ void http_common_runner()
     http.backlog = 10;
     http.delay = config->lifetime;
 
-    int ret;
+    chdir(config->script_path);
+
     ret = zl_http_init(&http);
     if (ret < 0)
         return;
