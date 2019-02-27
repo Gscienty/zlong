@@ -5,14 +5,12 @@
 #include <string.h>
 #include <malloc.h>
 
-static const char * __get_path(const struct config * const config,
-                               const char * uri)
+static const char * __get_path(const char * uri)
 {
     char * delimiter;
     char * path;
     char * chr;
     int i;
-    int base_len;
 
     path = calloc(256, 1);
     if (path == NULL) {
@@ -20,16 +18,13 @@ static const char * __get_path(const struct config * const config,
         return NULL;
     }
 
-    strcpy(path, config->script_path);
-    base_len = strlen(config->script_path);
-
     delimiter = strchr(uri, '?');
     if (delimiter == NULL) {
-        strcpy(path + base_len, uri);
+        strcpy(path, uri + 1);
     }
     else {
         chr = (char *) uri;
-        for (i = base_len; chr != delimiter; i++, chr++) {
+        for (i = 1; chr != delimiter; i++, chr++) {
             path[i] = *chr;
         }
     }
@@ -39,13 +34,7 @@ static const char * __get_path(const struct config * const config,
 
 const char * zl_lua_engine_get_script_path(struct http_req_protocol * const req)
 {
-    const struct config * config = zl_config_get();
-
-    if (config->route_path == NULL) {
-        return __get_path(config, req->uri);
-    }
-
-    return NULL;
+    return __get_path(req->uri);
 }
 
 void zl_lua_engine_notfound(struct http_res_protocol * const res)
