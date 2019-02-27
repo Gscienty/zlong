@@ -119,6 +119,7 @@ static void __security_respond(struct http_session * const session)
                  &writable->buf, 1,
                  __session_write);
     }
+    BIO_flush(session->write_bio);
 
     free(buf.base);
 }
