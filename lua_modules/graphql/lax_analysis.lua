@@ -20,17 +20,17 @@ function lax_analysis(source)
 
         -- field
         if lax == nil then
-            start_index, end_index, lax = string.find(source, '^[%s%c]*(_*%a%w+)', off)
+            start_index, end_index, lax = string.find(source, '^[%s%c]*([_%a][%w_]+)', off)
         end
 
         -- dir
         if lax == nil then
-            start_index, end_index, lax = string.find(source, '^[%s%c]*(@_*%a%w+)', off)
+            start_index, end_index, lax = string.find(source, '^[%s%c]*(@[_%a][%w_]+)', off)
         end
 
         -- var
         if lax == nil then
-            start_index, end_index, lax = string.find(source, '^[%s%c]*($_*%a%w+)', off)
+            start_index, end_index, lax = string.find(source, '^[%s%c]*($[_%a][%w_]+)', off)
         end
 
         -- op
