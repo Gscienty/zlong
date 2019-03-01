@@ -11,14 +11,19 @@
 static inline const char * __get_script(struct http_req_protocol * const req)
 {
     const char * script_path = zl_lua_engine_get_script_path(req);
-    if (script_path != NULL && access(script_path, F_OK) == 0) {
-        return script_path;
+    struct config * config = zl_config_get();
+    if (config->route_path == NULL) {
+        if (script_path != NULL && access(script_path, F_OK) == 0) {
+            return script_path;
+        }
+        if (script_path != NULL) {
+            free((void *) script_path);
+        }
+        return NULL;
     }
-    if (script_path != NULL) {
-        free((void *) script_path);
+    else {
+        return strdup(config->route_path);
     }
-
-    return NULL;
 }
 
 static void __http(struct http_session * const session)
