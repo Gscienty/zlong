@@ -13,11 +13,6 @@ function lax_analysis(source)
             start_index, end_index, lax = string.find(source, '^[%s%c]*(%.%.%.)', off)
         end
 
-        -- string
-        if lax == nil then
-            start_index, end_index, lax = string.find(source, '^[%s%c]*("[^"]*")', off)
-        end
-
         -- field
         if lax == nil then
             start_index, end_index, lax = string.find(source, '^[%s%c]*([_%a][%w_]+)', off)
